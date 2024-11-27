@@ -1,2 +1,4 @@
 plan.md
 rule.cpp
+*.o
+fp_venv/
