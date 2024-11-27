@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -std=c++11 -Wall -Iinclude
 
-LDFLAGS = -lfltk
+LDFLAGS = -lfltk -lfltk_images
 
 SRCDIR = src
 BUILDDIR = build
