@@ -7,3 +7,6 @@ python虚拟环境配置
 - tenserflow
 C++ 配置
 - fltk
+- jsoncpp
+- libcurl
+- httplib
