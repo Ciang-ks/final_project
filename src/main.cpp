@@ -4,11 +4,13 @@
 #include <FL/Fl_JPEG_Image.H>
 #include <FL/Fl_Box.H>
 #include "play_with_human.h"
+#include "setting.cpp"
+#include "play_with_ai.h"
 
 // Callback functions
 void play_with_ai_callback(Fl_Widget *w, void *data)
 {
-    // ...implement play with AI functionality...
+    start_play_with_ai();
 }
 
 void play_with_human_callback(Fl_Widget *w, void *data)
@@ -18,7 +20,9 @@ void play_with_human_callback(Fl_Widget *w, void *data)
 
 void setting_callback(Fl_Widget *w, void *data)
 {
-    // ...implement settings functionality...
+    SettingWindow *setting_window = new SettingWindow(800, 800, "Setting");
+    setting_window->end();
+    setting_window->show();
 }
 
 void exit_callback(Fl_Widget *w, void *data)

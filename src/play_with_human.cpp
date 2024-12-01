@@ -8,37 +8,20 @@
 // 传出的数据包括棋盘状态，传到/api/board中，以及上一次落子的位置，是否有人胜利，是否有人违反规则，是否有人请求悔棋，是否有人请求求和，是否有人请求认输。
 // 服务器返回的数据通过json格式传输，包括以下几个字段：victory，ruleViolation，undoRequest，drawRequest，surrenderRequest。
 // 请注意，这个程序不需要实现人机对战，只需要实现人人对战即可。
-#include "play_with_human.h"
+#include "front_board.h"
 #include "draw_board.h"
-#include <FL/Fl.H>
-#include <FL/Fl_Window.H>
-#include <FL/Fl_Widget.H>
-#include <FL/fl_draw.H>
 #include <jsoncpp/json/json.h>
 #include <vector>
 using namespace std;
 
-const int BOARD_SIZE = 15;
 
 
-FBoard::FBoard(int size) : boardState(size, vector<int>(size, 0)), currentPlayer(1) {}
 
-    
-bool FBoard::placeStone(int row, int col) {
-    if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE && boardState[row][col] == 0) {
-        boardState[row][col] = currentPlayer;
-        currentPlayer = 3 - currentPlayer; // Switch player
-        return true;
-    }
-    return false;
-}
-
-FBoard gameBoard(BOARD_SIZE);
 
 
 void start_play_with_human() {
     Fl_Window *window = new Fl_Window(800, 800, "Gomoku HumanVS");
-    ChessBoard *board = new ChessBoard(0, 0, window->w(), window->h());
+    ChessBoard *board = new ChessBoard(0, 0, window->w(), window->h(), 1, 0);
     window->resizable(board); // Enable resizing for the board
     window->end();
     window->show();
