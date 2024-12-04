@@ -1,30 +1,37 @@
 #include "my_rule.h"
 
-BBoard::BBoard(FBoard *fboard) {
-    this->boardState = fboard->boardState;
-    this->currentPlayer = fboard->currentPlayer;
-    this->nowRow = fboard->nowRow;
-    this->nowCol = fboard->nowCol;
+
+
+BBoard::BBoard(const Json::Value& json) {
+    this->boardState = vector<vector<int>>(BOARD_LEN, vector<int>(BOARD_LEN, 0));
+    for (int i = 0; i < BOARD_LEN; i++) {
+        for (int j = 0; j < BOARD_LEN; j++) {
+            this->boardState[i][j] = json["board"][i][j].asInt();
+        }
+    }
+    this->currentPlayer = json["currentPlayer"].asInt();
+    this->nowRow = json["row"].asInt();
+    this->nowCol = json["col"].asInt();
     this->lastPlayer = WHITE + BLACK - this->currentPlayer;
 }
-
-int BBoard::getNumPieces() {
-    return this->numPieces;
-}
-
 int BBoard::isGameOver() {
-    if (numPieces > 5)
-    {
-        int we = this->win_end();
-        if (we == notOver) {
-            if (find(this->boardState.begin(), this->boardState.end(), 0) == boardState.end()) {
-                return flatFlag;
+    int we = this->win_end();
+    if (we == notOver) {
+        int flag = 1;
+        for (int i = 0; i < BOARD_LEN; i++) {
+            for (int j = 0; j < BOARD_LEN; j++) {
+                if (this->boardState[i][j] == 0) {
+                    flag = 0;
+                    break;
+                }
             }
-            return notOver;
         }
-        return we;
+        if (flag) {
+            return flatFlag;
+        }
+        return notOver;
     }
-    return notOver;
+    return we;
 }
 
 int BBoard::win_end() {
@@ -134,37 +141,46 @@ bool BBoard::ff_special_case(std::string& m_str, size_t pos, int f_case) {
     }
     else if (f_case == 2) {
         if (pos > 0) {
-            if (pos + 6 < m_str.size()) {
-                if (m_str[pos - 1] == '1' && ((
-                m_str[pos + 5] == 'o' && m_str[pos + 6] == '1') || (
-                m_str[pos + 5] == '0'))) return true;
-                return false;
+            if (m_str[pos - 1] == '1') {
+                if (pos + 6 < m_str.size()) {
+                    if ((m_str[pos + 5] == 'o' && m_str[pos + 6] == '1') || (m_str[pos + 5] == '0'))
+                        return true;
+                }
+                else if (pos + 5 == m_str.size() - 1) {
+                    if (m_str[pos + 5] == '0')
+                        return true;
+                }
+                else if (pos + 4 == m_str.size() - 1) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
             }
-            if (pos + 5 < m_str.size()) {
-                if (m_str[pos - 1] == '1' && m_str[pos + 5] == '0') return true;
-                return false;
-            }
-            if (m_str[pos - 1] == '1') return true;
             return false;
         }
         else return false;
     }
     else {
         if (pos + 5 < m_str.size()) {
-            if (pos - 2 >= 0) {
-                if ((m_str[pos - 2] == '1' && m_str[pos - 1] == 'o') || (m_str[pos - 1] == '0') && m_str[pos + 5] == '1')
+            if (m_str[pos + 5] == '1') {
+                if (pos - 2 >= 0) {
+                    if ((m_str[pos - 2] == '1' && m_str[pos - 1] == 'o') || (m_str[pos - 1] == '0'))
+                        return true;
+                }
+                else if (pos - 1 == 0) {
+                    if (m_str[pos - 1] == '0')
                     return true;
-                return false;
+                }
+                else {
+                    return true;
+                }
             }
-            else if (pos - 1 >= 0) {
-                if (m_str[pos + 5] == '1' && m_str[pos - 1] == '0') return true;
-                return false;
-            }
-            if (m_str[pos + 5] == '1') return true;
             return false;
         }
         else return false;
     }
+
 }
 
 bool BBoard::thereCount(string& m_str) {
@@ -187,6 +203,7 @@ bool BBoard::thereCount(string& m_str) {
     if (m_str.find(jt1) != m_str.npos) three++;
     if (m_str.find(jt2) != m_str.npos) three++;
     if (three > 1) return true;
+    else return false;
 }
 
 bool BBoard::three_three() {
@@ -289,6 +306,7 @@ bool BBoard::fourCount(string& m_str) {
         }
     }
     if (four > 1) return true;
+    else return false;
 }
 
 bool BBoard::four_four() {
@@ -298,7 +316,7 @@ bool BBoard::four_four() {
     int bias;
 
     bias = min(w, 5);
-    for (int i = w - bias; i < w + min(width - 1 - w, 5) + 1; i++) {
+    for (int i = w - bias; i < w + min(BOARD_LEN - 1 - w, 5) + 1; i++) {
         if (this->boardState[h][i] == 0) {
             m_str.append(1, 'o');
         }
@@ -313,7 +331,7 @@ bool BBoard::four_four() {
 
     m_str.clear();
     bias = min(h, 5);
-    for (int i = h - bias; i < h + min(width - 1 - h, 5) + 1; i++) {
+    for (int i = h - bias; i < h + min(BOARD_LEN - 1 - h, 5) + 1; i++) {
         if (this->boardState[i][w] == 0) {
             m_str.append(1, 'o');
         }
@@ -328,7 +346,7 @@ bool BBoard::four_four() {
 
     m_str.clear();
     bias = min(min(h, 5), min(w, 5));
-    for (int i = h - bias, j = w - bias; i < h + min(width - 1 - h, 5) + 1; i++, j++) {
+    for (int i = h - bias, j = w - bias; i < h + min(BOARD_LEN - 1 - h, 5) + 1; i++, j++) {
         if (this->boardState[i][j] == 0) {
             m_str.append(1, 'o');
         }
@@ -342,7 +360,7 @@ bool BBoard::four_four() {
     if (this->fourCount(m_str)) return true;
 
     m_str.clear();
-    bias = min(min(width - 1 - w, 5), min(h, 5));
+    bias = min(min(BOARD_LEN - 1 - w, 5), min(h, 5));
     for (int i = h + bias, j = w - bias; i > h - 1; i--, j++) {
         if (this->boardState[i][j] == 0) {
             m_str.append(1, 'o');

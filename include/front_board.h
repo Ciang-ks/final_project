@@ -5,6 +5,9 @@
 const int EMPTY = 0;
 const int BLACK = 1;
 const int WHITE = 2;
+const int notOver = 200;
+const int flatFlag = 100;
+
 using namespace std;
 
 class FBoard {
