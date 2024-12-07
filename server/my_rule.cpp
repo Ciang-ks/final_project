@@ -13,6 +13,10 @@ BBoard::BBoard(const Json::Value& json) {
     this->nowRow = json["row"].asInt();
     this->nowCol = json["col"].asInt();
     this->lastPlayer = WHITE + BLACK - this->currentPlayer;
+    string lastNotice = this->lastPlayer == BLACK ? "BLACK" : "WHITE";
+    cout << "Place " <<  lastNotice << " Stone in" << endl;
+    cout << "Row: " << this->nowRow + 1 << ' ';
+    cout << "Col: " << this->nowCol + 1 << endl << endl;
 }
 int BBoard::isGameOver() {
     int we = this->win_end();
@@ -20,11 +24,12 @@ int BBoard::isGameOver() {
         int flag = 1;
         for (int i = 0; i < BOARD_LEN; i++) {
             for (int j = 0; j < BOARD_LEN; j++) {
-                if (this->boardState[i][j] == 0) {
+                if (this->boardState[i][j] == EMPTY) {
                     flag = 0;
                     break;
                 }
             }
+            if (flag == 0) break;
         }
         if (flag) {
             return flatFlag;
@@ -37,10 +42,10 @@ int BBoard::isGameOver() {
 int BBoard::win_end() {
     int last_player = this->lastPlayer;
     if (last_player == BLACK) {
-        if (long_connect()) return WHITE;
-        if (five_connect()) return BLACK;
-        if (three_three()) return WHITE;
-        if (four_four()) return WHITE;
+        if (this->long_connect()) return WHITE;
+        if (this->five_connect()) return BLACK;
+        if (this->three_three()) return WHITE;
+        if (this->four_four()) return WHITE;
     }
     else {
         if (this->five_connect()) return WHITE;
@@ -61,13 +66,14 @@ bool BBoard::long_connect() {
         }
         ret = 0;
         for (int k = 0; k < 6; k++) {
-            if (this->boardState[h][w + k] != last_player) {
+            if (this->boardState[h][i + k] != last_player) {
                 ret = 1;
                 break;
             }
         }
         if (ret == 0) return true;
     }
+
     bias = min(h, 5);
     for (int i = h - bias; i < h + 1; i++) {
         if (BOARD_LEN - 1 - i < 5) {
@@ -75,7 +81,7 @@ bool BBoard::long_connect() {
         }
         ret = 0;
         for (int k = 0; k < 6; k++) {
-            if (this->boardState[h + k][w] != last_player) {
+            if (this->boardState[i + k][w] != last_player) {
                 ret = 1;
                 break;
             }
@@ -84,13 +90,13 @@ bool BBoard::long_connect() {
     }
 
     bias = min(min(h, 5), min(w, 5));
-    for (int i = h - bias, j = w - bias; i < h + 1; i ++, j++) {
+    for (int i = h - bias, j = w - bias; i < h + 1; i++, j++) {
         if ((BOARD_LEN - 1 - i < 5) || (BOARD_LEN - 1 - j < 5)) {
             break;
         }
         ret = 0;
         for (int k = 0; k < 6; k ++) {
-            if (this->boardState[h + k][w + k] != last_player) {
+            if (this->boardState[i + k][j + k] != last_player) {
                 ret = 1;
                 break;
             }
@@ -100,12 +106,12 @@ bool BBoard::long_connect() {
 
     bias = min(min(BOARD_LEN - 1 - h, 5), min(w, 5));
     for (int i = h + bias, j = w - bias; i > h - 1; i--, j++) {
-        if ((BOARD_LEN - 1 - i < 5) || (j < 5)) {
+        if ((BOARD_LEN - 1 - j < 5) || (i < 5)) {
             break;
         }
         ret = 0;
-        for (int k = 0; k < 6; k ++) {
-            if (this->boardState[h - k][w + k] != last_player) {
+        for (int k = 0; k < 6; k++) {
+            if (this->boardState[i - k][j + k] != last_player) {
                 ret = 1;
                 break;
             }
@@ -211,6 +217,7 @@ bool BBoard::three_three() {
     int w = this->nowCol;
     string m_str;
     int bias = min(w, 4);
+    int altbias;
     for (int i = w - bias; i < w + min(BOARD_LEN - 1 - w, 4) + 1; i++) {
         if (this->boardState[h][i] == 0) {
             m_str.append(1, 'o');
@@ -242,7 +249,8 @@ bool BBoard::three_three() {
 
     m_str.clear();
     bias = min(min(h, 4), min(w, 4));
-    for (int i = h - bias, j = w - bias; i < h + min(BOARD_LEN - 1 - h, 4) + 1; i++, j++) {
+    altbias = min(min(BOARD_LEN - 1 - h, 4), min(BOARD_LEN - 1 - w, 4));
+    for (int i = h - bias, j = w - bias; i < h + altbias + 1; i++, j++) {
         if (this->boardState[i][j] == 0) {
             m_str.append(1, 'o');
         }
@@ -258,7 +266,8 @@ bool BBoard::three_three() {
     m_str.clear();
 
     bias = min(min(BOARD_LEN - 1 - w, 4), min(h, 4));
-    for (int i = h + bias, j = w - bias; i > h - 1; i--, j++) {
+    altbias = min(min(BOARD_LEN - 1 - h, 4), min(w, 4));
+    for (int i = h - bias, j = w + bias; i < h + altbias + 1; i++, j--) {
         if (this->boardState[i][j] == 0) {
             m_str.append(1, 'o');
         }
@@ -314,6 +323,7 @@ bool BBoard::four_four() {
     int w = this->nowCol;
     string m_str;
     int bias;
+    int altbias;
 
     bias = min(w, 5);
     for (int i = w - bias; i < w + min(BOARD_LEN - 1 - w, 5) + 1; i++) {
@@ -346,7 +356,8 @@ bool BBoard::four_four() {
 
     m_str.clear();
     bias = min(min(h, 5), min(w, 5));
-    for (int i = h - bias, j = w - bias; i < h + min(BOARD_LEN - 1 - h, 5) + 1; i++, j++) {
+    altbias = min(min(BOARD_LEN - 1 - h, 5), min(BOARD_LEN - 1 - w, 5));
+    for (int i = h - bias, j = w - bias;i < h + altbias + 1; i++, j++) {
         if (this->boardState[i][j] == 0) {
             m_str.append(1, 'o');
         }
@@ -361,7 +372,8 @@ bool BBoard::four_four() {
 
     m_str.clear();
     bias = min(min(BOARD_LEN - 1 - w, 5), min(h, 5));
-    for (int i = h + bias, j = w - bias; i > h - 1; i--, j++) {
+    altbias = min(min(BOARD_LEN - 1 - h, 5), min(w, 5));
+    for (int i = h - bias, j = w + bias; i < altbias + 1; i++, j--) {
         if (this->boardState[i][j] == 0) {
             m_str.append(1, 'o');
         }
@@ -381,40 +393,36 @@ bool BBoard::five_connect() {
     int w = this->nowCol;
     int last_player = this->lastPlayer;
     int ret;
-    if (h == -1) return false;
+
     int bias = min(w, 4);
     for (int i = w - bias; i < w + 1; i++) {
-        if (BOARD_LEN - 1 - w < 4) {
+        if (BOARD_LEN - 1 - i < 4) {
             break;
         }
         ret = 0;
         for (int k = 0; k < 5; k++) {
 
-            if (this->boardState[w + k][h] != last_player) {
+            if (this->boardState[h][i + k] != last_player) {
                 ret = 1;
                 break;
             }
         }
-        if (ret == 0) {
-            return true;
-        }
+        if (ret == 0) return true;
     }
     bias = min(h, 4);
     for (int i = h - bias; i < h + 1; i++) {
-        if (BOARD_LEN - 1 - h < 4) {
+        if (BOARD_LEN - 1 - i < 4) {
             break;
         }
         ret = 0;
         for (int k = 0; k < 5; k++) {
 
-            if (this->boardState[w][h + k] != last_player) {
+            if (this->boardState[i + k][w] != last_player) {
                 ret = 1;
                 break;
             }
         }
-        if (ret == 0) {
-            return true;
-        }
+        if (ret == 0) return true;
     }
 
     bias = min(min(h, 4), min(w, 4));
@@ -424,32 +432,28 @@ bool BBoard::five_connect() {
         }
         ret = 0;
         for (int k = 0; k < 5; k++) {
-
-            if (this->boardState[w + k][h + k] != last_player) {
+            if (this->boardState[i + k][j + k] != last_player) {
                 ret = 1;
                 break;
             }
         }
-        if (ret == 0) {
-            return true;
-        }
+        if (ret == 0) return true;
     }
+
     bias = min(min(BOARD_LEN - 1 - h, 4), min(w, 4));
     for (int i = h + bias, j = w - bias; i > h - 1; i--, j++) {
-        if ((BOARD_LEN - 1 - i < 4) || (j < 4)) {
+        if ((BOARD_LEN - 1 - j < 4) || (i < 4)) {
             break;
         }
         ret = 0;
         for (int k = 0; k < 5; k++) {
 
-            if (this->boardState[w + k][h - k] != last_player) {
+            if (this->boardState[i - k][j + k] != last_player) {
                 ret = 1;
                 break;
             }
         }
-        if (ret == 0) {
-            return true;
-        }
+        if (ret == 0) return true;
     }
     return false;
 }
