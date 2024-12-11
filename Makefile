@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -Wall -Iinclude
 
-LDFLAGS = -lfltk -lfltk_images -ljsoncpp -lpthread
+LDFLAGS = -lfltk -lfltk_images -ljsoncpp -lpthread -lSDL2 -lSDL2_mixer
 
 SRCDIR = src
 BUILDDIR = build

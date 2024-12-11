@@ -21,7 +21,8 @@ using namespace std;
 
 void start_play_with_human() {
     Fl_Window *window = new Fl_Window(800, 800, "Gomoku HumanVS");
-    ChessBoard *board = new ChessBoard(0, 0, window->w(), window->h(), 1, 0);
+    FBoard *inboard = new FBoard(BOARDSIZE);
+    ChessBoard *board = new ChessBoard(0, 0, window->w(), window->h(), 1, 0, inboard);
     window->resizable(board); // Enable resizing for the board
     window->end();
     window->show();

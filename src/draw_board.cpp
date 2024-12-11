@@ -1,18 +1,69 @@
 #include "draw_board.h"
-#include "front_board.h"
-#include "httplib.h"
-#include <FL/Fl.H>
-#include <FL/Fl_Window.H>
-#include <FL/Fl_Widget.H>
-#include <FL/fl_draw.H>
-#include <jsoncpp/json/json.h>
-#include <vector>
-#include <curl/curl.h>
+std::stack<std::pair<int, int>> moves;
 
-ChessBoard::ChessBoard(int X, int Y, int W, int H, int ingamecase, int inuser_color) : Fl_Widget(X, Y, W, H), gameBoard(BOARD_SIZE)
+
+ChessBoard::ChessBoard(int X, int Y, int W, int H, int ingamecase, int inuser_color, FBoard* inboard) : Fl_Widget(X, Y, W, H), gameBoard(BOARD_SIZE)
 {
     this->gamecase = ingamecase;
     this->user_color = inuser_color;
+    this->gameBoard = *inboard;
+
+    // Add buttons
+    int button_width = 100;
+    int button_height = 30;
+
+    undo_button = new Fl_Button(X + 5, Y + 5, button_width, button_height, "Undo");
+    undo_button->callback([](Fl_Widget *w, void *data) {
+        ChessBoard *board = (ChessBoard *)data;
+        int nowrow = moves.top().first;
+        int nowcol = moves.top().second;
+        moves.pop();
+        board->gameBoard.boardState[nowrow][nowcol] = EMPTY;
+        board->gameBoard.currentPlayer = board->gameBoard.currentPlayer == BLACK ? WHITE : BLACK;
+        board->redraw();
+    }, this);
+    undo_button->labelsize(25);
+    undo_button->box(FL_ROUND_UP_BOX);
+
+    save_button = new Fl_Button(X + W - button_width - 5, Y + 5, button_width, button_height, "Save");
+    save_button->callback([](Fl_Widget *w, void *data) {
+    ChessBoard *board = (ChessBoard *)data;
+    Json::Value jsonData;
+    jsonData["currentPlayer"] = board->gameBoard.currentPlayer;
+
+    Json::Value boardState(Json::arrayValue);
+    for (int i = 0; i < BOARD_SIZE; ++i) {
+        Json::Value row(Json::arrayValue);
+        for (int j = 0; j < BOARD_SIZE; ++j) {
+        row.append(board->gameBoard.boardState[i][j]);
+        }
+        boardState.append(row);
+    }
+    jsonData["boardState"] = boardState;
+
+    Json::StreamWriterBuilder writer;
+    std::string jsonString = Json::writeString(writer, jsonData);
+
+    std::ofstream file("savegame.json");
+    if (file.is_open()) {
+        file << jsonString;
+        file.close();
+        fl_message("Game saved successfully!");
+    } else {
+        fl_message("Failed to save game.");
+    }
+    }, this);
+    save_button->labelsize(25);
+    save_button->box(FL_ROUND_UP_BOX);
+
+    close_button = new Fl_Button(X + W - button_width - 5, Y + H - button_height - 5, button_width, button_height, "Close");
+    close_button->callback([](Fl_Widget *w, void *data) {
+        // Close button callback
+        Fl_Window *win = (Fl_Window *)data;
+        win->hide();
+    }, this->window());
+    close_button->labelsize(25);
+    close_button->box(FL_ROUND_UP_BOX);
 }
 
 void ChessBoard::draw()
@@ -22,8 +73,10 @@ void ChessBoard::draw()
     int grid_size = (w() - 2 * margin) / (BOARD_SIZE - 1);
 
     // 绘制背景
+    fl_push_clip(40, 40, w() - 80, h() - 80); // Limit redraw area to the board
     fl_color(fl_rgb_color(0xE0, 0xA9, 0x6A)); // Light brown
     fl_rectf(x(), y(), w(), h());
+    fl_pop_clip();
 
     // 绘制网格
     fl_color(FL_BLACK);
@@ -49,6 +102,30 @@ void ChessBoard::draw()
             }
         }
     }
+}
+
+void showGameOverMessage(int winner) {
+    int W = 800;
+    int H = 600;
+    Fl_Window *win = new Fl_Window(W, H, "Game Over");
+    std::string message = (winner == BLACK) ? "Black wins!" : "White wins!";
+    int margin = 50;
+    Fl_Box *box = new Fl_Box(margin, margin, W - 2 * margin, H - 2 * margin - 50, message.c_str());
+    box->box(FL_UP_BOX);
+    box->labelfont(FL_BOLD + FL_ITALIC);
+    box->labelsize(50);
+    box->labeltype(FL_SHADOW_LABEL);
+
+    Fl_Button *button = new Fl_Button(W / 2 - 50, H - 70, 100, 30, "OK");
+    button->callback([](Fl_Widget *w, void *data) {
+        Fl_Window *win = (Fl_Window *)data;
+        win->hide();
+    }, win);
+
+    win->end();
+    win->set_modal();
+    win->show();
+    Fl::run();
 }
 
 int sendGameState(const FBoard& gameBoard, int col, int row) {
@@ -82,7 +159,8 @@ int sendGameState(const FBoard& gameBoard, int col, int row) {
             int isGameOver = responseJson.asInt();
             std::cout << "Response: " << isGameOver << std::endl;
             return isGameOver;
-        } else {
+        } 
+        else {
             std::cerr << "Failed to parse response JSON" << std::endl;
         }
     }
@@ -103,15 +181,26 @@ int ChessBoard::handle(int event)
         int col = (mx - margin + grid_size / 2) / grid_size;
         int row = (my - margin + grid_size / 2) / grid_size;
 
-        
+        int lastPlayer = gameBoard.currentPlayer;
         if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE)
         {
+            moves.push(std::make_pair(row, col));
             if (gamecase == 1)
             {
                 if (gameBoard.placeStone(row, col))
                 {
                     redraw();
-                    cout << sendGameState(gameBoard, col, row) << endl;
+                    int state = sendGameState(gameBoard, col, row);
+                    if (state == -1) {
+                        fl_message("Failed to send game state");
+                        this->window()->hide();
+                    }
+                    else if (state != 200)
+                    {
+                        // Game over
+                        this->window()->hide();
+                        showGameOverMessage(lastPlayer);
+                    }
                 }
             }
             else if (gamecase == 2 && gameBoard.currentPlayer == user_color)
@@ -119,22 +208,34 @@ int ChessBoard::handle(int event)
                 if (gameBoard.placeStone(row, col))
                 {
                     redraw();
-                    if (sendGameState(gameBoard, col, row) % 100 == 0)
+                    int state = sendGameState(gameBoard, col, row);
+                    if (state == -1) {
+                        fl_message("Failed to send game state");
+                        this->window()->hide();
+                    }
+                    else if (state != 200)
                     {
                         // Game over
-                        // ...code to display game over message...
-                    };
+                        this->window()->hide();
+                        showGameOverMessage(lastPlayer);
+                    }
                     // AI move
                     // ...code to get AI move...
                     int ai_col = 0, ai_row = 0; // Replace with actual AI move
                     if (gameBoard.placeStone(ai_row, ai_col))
                     {
                         redraw();
-                        if (sendGameState(gameBoard, ai_col, ai_row) % 100 == 0)
+                        int state = sendGameState(gameBoard, col, row);
+                        if (state == -1) {
+                        fl_message("Failed to send game state");
+                            this->window()->hide();
+                        }
+                        else if (state != 200)
                         {
                             // Game over
-                            // ...code to display game over message...
-                        };
+                            this->window()->hide();
+                            showGameOverMessage(lastPlayer);
+                        }
                     }
                 }
             }

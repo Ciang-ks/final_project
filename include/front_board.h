@@ -7,6 +7,7 @@ const int BLACK = 1;
 const int WHITE = 2;
 const int notOver = 200;
 const int flatFlag = 100;
+const int BOARDSIZE = 15;
 
 using namespace std;
 
@@ -14,7 +15,6 @@ class FBoard {
 public:
     vector<vector<int>> boardState;
     int currentPlayer;
-    int nowRow, nowCol;
 
     FBoard(int size);
     bool placeStone(int row, int col);
