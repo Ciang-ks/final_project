@@ -1,5 +1,6 @@
 plan.md
 rule.cpp
+savegame.json
 *.o
 fp_venv/
 test/
