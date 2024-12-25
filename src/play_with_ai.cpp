@@ -13,10 +13,6 @@ using namespace std;
 const int ButtonWidth = 500;
 const int ButtonHeight = 100;
 
-void ai_move() {
-    // ...code to communicate with server to get AI move...
-    // Example: gameBoard.placeStone(ai_row, ai_col);
-}
 
 void ai_mode(Fl_Widget *w, void *data) {
     int color = *(int *)data;
@@ -48,4 +44,11 @@ void start_play_with_ai() {
     exit_button->labelsize(25);
     window->end();
     window->show();
+
+    window->callback([](Fl_Widget *w, void *data) {
+        delete (int *)data;
+    }, color_ptr1);
+    window->callback([](Fl_Widget *w, void *data) {
+        delete (int *)data;
+    }, color_ptr2);
 }
