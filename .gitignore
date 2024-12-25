@@ -3,3 +3,4 @@ rule.cpp
 *.o
 fp_venv/
 test/
+train/

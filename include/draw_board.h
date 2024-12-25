@@ -14,6 +14,7 @@
 #include <jsoncpp/json/json.h>
 #include <vector>
 #include <stack>
+#include <utility>
 const int BOARD_SIZE = 15;
 
 void showGameOverMessage(int winner);
@@ -25,6 +26,7 @@ private:
 
 public:
     int gamecase;
+    bool lock;
     int user_color;
     FBoard gameBoard;
     Fl_Button *undo_button;

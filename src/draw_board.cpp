@@ -7,6 +7,7 @@ ChessBoard::ChessBoard(int X, int Y, int W, int H, int ingamecase, int inuser_co
     this->gamecase = ingamecase;
     this->user_color = inuser_color;
     this->gameBoard = *inboard;
+    this->lock = false;
 
     // Add buttons
     int button_width = 100;
@@ -167,6 +168,44 @@ int sendGameState(const FBoard& gameBoard, int col, int row) {
     return -1;
 }
 
+int sendAIRequest(const FBoard& gameBoard, int col, int row) {
+    Json::Value jsonData;
+    jsonData["currentPlayer"] = gameBoard.currentPlayer;
+    jsonData["col"] = col;
+    jsonData["row"] = row;
+    
+    Json::Value board(Json::arrayValue);
+    for (int i = 0; i < BOARD_SIZE; ++i) {
+        Json::Value jsonRow(Json::arrayValue);
+        for (int j = 0; j < BOARD_SIZE; ++j) {
+            jsonRow.append(gameBoard.boardState[i][j]);
+        }
+        board.append(jsonRow);
+    }
+    jsonData["board"] = board;
+
+    Json::StreamWriterBuilder writer;
+    std::string jsonString = Json::writeString(writer, jsonData);
+
+    httplib::Client cli("localhost", 7070);
+    auto res = cli.Post("/api/ai", jsonString, "application/json");
+    if (!res || res->status != 200) {
+        std::cerr << "Failed to send AI request: " << (res ? res->status : 0) << std::endl;
+    } else {
+        Json::Value responseJson;
+        Json::Reader reader;
+
+        if (reader.parse(res->body, responseJson)) {
+            int move = responseJson["move"].asInt();
+            return move;
+        } 
+        else {
+            std::cerr << "Failed to parse response JSON" << std::endl;
+        }
+    }
+    return -1;
+}
+
 int ChessBoard::handle(int event)
 {
     switch (event)
@@ -184,12 +223,12 @@ int ChessBoard::handle(int event)
         int lastPlayer = gameBoard.currentPlayer;
         if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE)
         {
-            moves.push(std::make_pair(row, col));
             if (gamecase == 1)
             {
                 if (gameBoard.placeStone(row, col))
                 {
                     redraw();
+                    moves.push(std::make_pair(row, col));
                     int state = sendGameState(gameBoard, col, row);
                     if (state == -1) {
                         fl_message("Failed to send game state");
@@ -208,6 +247,7 @@ int ChessBoard::handle(int event)
                 if (gameBoard.placeStone(row, col))
                 {
                     redraw();
+                    moves.push(std::make_pair(row, col));
                     int state = sendGameState(gameBoard, col, row);
                     if (state == -1) {
                         fl_message("Failed to send game state");
@@ -219,23 +259,26 @@ int ChessBoard::handle(int event)
                         this->window()->hide();
                         showGameOverMessage(lastPlayer);
                     }
-                    // AI move
-                    // ...code to get AI move...
-                    int ai_col = 0, ai_row = 0; // Replace with actual AI move
-                    if (gameBoard.placeStone(ai_row, ai_col))
+                    
+                }
+            }
+            else if (gamecase == 2 && gameBoard.currentPlayer != user_color){
+                int move = sendAIRequest(gameBoard, moves.top().second, moves.top().first);
+                int ai_col = move % BOARD_SIZE, ai_row = move / BOARD_SIZE;
+                if (gameBoard.placeStone(ai_row, ai_col))
+                {
+                    redraw();
+                    moves.push(std::make_pair(ai_row, ai_col));
+                    int state = sendGameState(gameBoard, ai_col, ai_row);
+                    if (state == -1) {
+                    fl_message("Failed to send game state");
+                        this->window()->hide();
+                    }
+                    else if (state != 200)
                     {
-                        redraw();
-                        int state = sendGameState(gameBoard, col, row);
-                        if (state == -1) {
-                        fl_message("Failed to send game state");
-                            this->window()->hide();
-                        }
-                        else if (state != 200)
-                        {
-                            // Game over
-                            this->window()->hide();
-                            showGameOverMessage(lastPlayer);
-                        }
+                        // Game over
+                        this->window()->hide();
+                        showGameOverMessage(lastPlayer);
                     }
                 }
             }
