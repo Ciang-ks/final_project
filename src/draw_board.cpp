@@ -92,6 +92,14 @@ void ChessBoard::draw()
     {
         for (int j = 0; j < BOARD_SIZE; ++j)
         {
+            if ((i == 7 && j == 7) || (i == 3 && j == 3) || (i == 3 && j == 11) || (i == 11 && j == 3) || (i == 11 && j == 11))
+            {
+                fl_color(FL_BLACK);
+                fl_pie(
+                    margin + j * grid_size - 4,
+                    margin + i * grid_size - 4,
+                    8, 8, 0, 360);
+            }
             if (gameBoard.boardState[i][j] != 0)
             {
                 fl_color(gameBoard.boardState[i][j] == BLACK ? FL_BLACK : FL_WHITE);

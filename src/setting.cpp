@@ -65,7 +65,7 @@ void SettingWindow::show_adjust_window() {
     Fl_Window* adjust_window = new Fl_Window(500, 500, "Adjust");
 
     Fl_Choice* bgm_choice = new Fl_Choice(120, 50, 300, 80, "BGM:");
-    bgm_choice->add("BGM 1|BGM 2|BGM 3");
+    bgm_choice->add("BGM 1|BGM 2|BGM 3|BGM 4");
     choice_index = bgm_choice->value();
     bgm_choice->labelsize(25);
     bgm_choice->textsize(25);
@@ -115,6 +115,8 @@ void SettingWindow::bgm_choice_callback(Fl_Widget* w, void* data) {
         case 2:
             file = "assets/audio/bgm3.mp3";
             break;
+        case 3:
+            file = "assets/audio/bgm4.mp3";
         default:
             file = "assets/audio/bgm.mp3";
             break;

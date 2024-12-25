@@ -2,6 +2,9 @@
 #define FRONT_BOARD_H
 #include <FL/Fl_Widget.H>
 #include <vector>
+#include <iostream>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 const int EMPTY = 0;
 const int BLACK = 1;
 const int WHITE = 2;
@@ -17,6 +20,7 @@ public:
     int currentPlayer;
 
     FBoard(int size);
+    ~FBoard();
     bool placeStone(int row, int col);
 };
 
