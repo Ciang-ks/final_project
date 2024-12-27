@@ -77,7 +77,7 @@ void SettingWindow::show_adjust_window() {
     Fl_Spinner* volume_spinner = new Fl_Spinner(120, 150, 300, 80, "Volume:");
     volume_spinner->minimum(0);
     volume_spinner->maximum(MIX_MAX_VOLUME);
-    volume_spinner->value(80);
+    volume_spinner->value(5);
     volume_spinner->labelsize(25);
     volume_spinner->textsize(25);
     volume_spinner->callback([](Fl_Widget* w, void* data) {

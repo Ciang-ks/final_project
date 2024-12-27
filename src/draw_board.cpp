@@ -228,7 +228,6 @@ int ChessBoard::handle(int event)
         int col = (mx - margin + grid_size / 2) / grid_size;
         int row = (my - margin + grid_size / 2) / grid_size;
 
-        int lastPlayer = gameBoard.currentPlayer;
         if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE)
         {
             if (gamecase == 1)
@@ -246,7 +245,7 @@ int ChessBoard::handle(int event)
                     {
                         // Game over
                         this->window()->hide();
-                        showGameOverMessage(lastPlayer);
+                        showGameOverMessage(state);
                     }
                 }
             }
@@ -265,7 +264,7 @@ int ChessBoard::handle(int event)
                     {
                         // Game over
                         this->window()->hide();
-                        showGameOverMessage(lastPlayer);
+                        showGameOverMessage(state);
                     }
                     
                 }
@@ -286,7 +285,7 @@ int ChessBoard::handle(int event)
                     {
                         // Game over
                         this->window()->hide();
-                        showGameOverMessage(lastPlayer);
+                        showGameOverMessage(state);
                     }
                 }
             }

@@ -13,7 +13,7 @@ model_file = os.path.join(current_dir, '../model/best_policy.model')
 board_width = 15
 board_height = 15
 best_policy = PolicyValueNet(board_width, board_height, model_file=model_file)
-mcts_player = MCTSPlayer(best_policy.policy_value_fn, c_puct=5, n_playout=1000)
+mcts_player = MCTSPlayer(best_policy.policy_value_fn, c_puct=5, n_playout=500)
 
 @app.route('/api/ai', methods=['POST'])
 def get_next_move():

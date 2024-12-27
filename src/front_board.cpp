@@ -16,6 +16,8 @@ FBoard::FBoard(int size) : boardState(size, vector<int>(size, 0)), currentPlayer
     if (!placeSound) {
         cerr << "Failed to load place.mp3: " << Mix_GetError() << endl;
     }
+
+    Mix_VolumeChunk(placeSound, MIX_MAX_VOLUME);
 }
 FBoard::~FBoard() {
     // 清理 SDL2 和 SDL2_mixer 资源

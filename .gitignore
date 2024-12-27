@@ -2,6 +2,7 @@ plan.md
 rule.cpp
 savegame.json
 *.o
+__pycache__
 fp_venv/
 test/
 train/
