@@ -9,7 +9,7 @@ ChessBoard::ChessBoard(int X, int Y, int W, int H, int ingamecase, int inuser_co
     this->gameBoard = *inboard;
     this->lock = false;
 
-    // Add buttons
+    // 添加按钮
     int button_width = 100;
     int button_height = 30;
 
@@ -59,7 +59,7 @@ ChessBoard::ChessBoard(int X, int Y, int W, int H, int ingamecase, int inuser_co
 
     close_button = new Fl_Button(X + W - button_width - 5, Y + H - button_height - 5, button_width, button_height, "Close");
     close_button->callback([](Fl_Widget *w, void *data) {
-        // Close button callback
+        // 关闭按钮回调
         Fl_Window *win = (Fl_Window *)data;
         win->hide();
     }, this->window());
@@ -74,8 +74,8 @@ void ChessBoard::draw()
     int grid_size = (w() - 2 * margin) / (BOARD_SIZE - 1);
 
     // 绘制背景
-    fl_push_clip(40, 40, w() - 80, h() - 80); // Limit redraw area to the board
-    fl_color(fl_rgb_color(0xE0, 0xA9, 0x6A)); // Light brown
+    fl_push_clip(40, 40, w() - 80, h() - 80); // 限制重绘区域到棋盘
+    fl_color(fl_rgb_color(0xE0, 0xA9, 0x6A)); // 浅棕色
     fl_rectf(x(), y(), w(), h());
     fl_pop_clip();
 
@@ -84,11 +84,11 @@ void ChessBoard::draw()
     for (int i = 0; i < BOARD_SIZE; ++i)
     {
         int posX = margin + i * grid_size;
-        fl_line(margin, posX, w() - margin, posX); // Horizontal lines
-        fl_line(posX, margin, posX, h() - margin); // Vertical lines
+        fl_line(margin, posX, w() - margin, posX); // 水平线
+        fl_line(posX, margin, posX, h() - margin); // 垂直线
     }
 
-    // Draw stones
+    // 绘制棋子
     for (int i = 0; i < BOARD_SIZE; ++i)
     {
         for (int j = 0; j < BOARD_SIZE; ++j)
@@ -138,6 +138,7 @@ void showGameOverMessage(int winner) {
 }
 
 int sendGameState(const FBoard& gameBoard, int col, int row) {
+    // 创建json数据
     Json::Value jsonData;
     jsonData["currentPlayer"] = gameBoard.currentPlayer;
     jsonData["col"] = col;
@@ -153,9 +154,11 @@ int sendGameState(const FBoard& gameBoard, int col, int row) {
     }
     jsonData["board"] = board;
 
+    // 将json数据转换为字符串
     Json::StreamWriterBuilder writer;
     std::string jsonString = Json::writeString(writer, jsonData);
 
+    // 发送http请求
     httplib::Client cli("localhost", 8080);
     auto res = cli.Post("/api/board", jsonString, "application/json");
     if (!res || res->status != 200) {
@@ -177,6 +180,7 @@ int sendGameState(const FBoard& gameBoard, int col, int row) {
 }
 
 int sendAIRequest(const FBoard& gameBoard, int col, int row) {
+    // 创建json数据
     Json::Value jsonData;
     jsonData["currentPlayer"] = gameBoard.currentPlayer;
     jsonData["col"] = col;
@@ -192,9 +196,11 @@ int sendAIRequest(const FBoard& gameBoard, int col, int row) {
     }
     jsonData["board"] = board;
 
+    // 将json数据转换为字符串
     Json::StreamWriterBuilder writer;
     std::string jsonString = Json::writeString(writer, jsonData);
 
+    // 发送http请求
     httplib::Client cli("localhost", 7070);
     auto res = cli.Post("/api/ai", jsonString, "application/json");
     if (!res || res->status != 200) {
@@ -220,8 +226,8 @@ int ChessBoard::handle(int event)
     {
     case FL_PUSH:
     {
-        // Calculate margin and grid size based on current widget size
-        int margin = w() / 15; // Same as in draw()
+        // 计算边距和网格大小
+        int margin = w() / 15; // 与 draw() 中相同
         int grid_size = (w() - 2 * margin) / (BOARD_SIZE - 1);
         int mx = Fl::event_x();
         int my = Fl::event_y();
@@ -243,7 +249,7 @@ int ChessBoard::handle(int event)
                     }
                     else if (state != 200)
                     {
-                        // Game over
+                        // 游戏结束
                         this->window()->hide();
                         showGameOverMessage(state);
                     }
@@ -262,7 +268,7 @@ int ChessBoard::handle(int event)
                     }
                     else if (state != 200)
                     {
-                        // Game over
+                        // 游戏结束
                         this->window()->hide();
                         showGameOverMessage(state);
                     }
@@ -283,7 +289,7 @@ int ChessBoard::handle(int event)
                     }
                     else if (state != 200)
                     {
-                        // Game over
+                        // 游戏结束
                         this->window()->hide();
                         showGameOverMessage(state);
                     }

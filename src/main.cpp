@@ -8,12 +8,13 @@
 #include "front_board.h"
 #include "setting.h"
 #include "play_with_ai.h"
-#include "mainpage.h" // Include the new header file
+#include "mainpage.h"
 
 
 
 int main(int argc, char **argv)
 {
+    // 创建主页面
     MainWindow *window = new MainWindow(800, 800, "Main Menu");
     window->show(argc, argv);
     return Fl::run();
